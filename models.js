@@ -1,19 +1,35 @@
 "use strict";
 
 const mongoose = require("mongoose");
+mongoose.Promise = global.Promise;
 
-// this is our schema to represent a restaurant
-const blogSchema = mongoose.Schema({
-  title: { type: String, required: true },
-  content: { type: String },
-  author: {
-    firstName: String,
-    // coord will be an array of string values
-    lastName: String
-  },
-  // grades will be an array of objects
-  created: { type: Date, default: Date.now }
+// this is our schema to represent authors
+const authorSchema = mongoose.Schema({
+  firstName: { type: String, trim:true },
+  lastName: { type: String, trim:true },
+  userName: { type: String, trim:true, unique: true }
 });
+
+let commentSchema = mongoose.Schema({ content: 'string' });
+
+const blogPostSchema = mongoose.Schema({
+  title: { type: String, trim:true },
+  content: { type: String },
+  author: { type: mongoose.SchemaType.Types.ObjectId, ref: 'Author'},
+  // grades will be an array of objects
+  comments: [commentSchema]
+});
+
+blogPostSchema.pre('find', function(next) {
+  this.populate('author');
+  next();
+})
+
+blogPostSchema.pre('findOne', function(next) {
+  this.populate('author');
+  next();
+})
+
 
 // *virtuals* (http://mongoosejs.com/docs/guide.html#virtuals)
 // allow us to define properties on our object that manipulate
@@ -34,12 +50,13 @@ blogSchema.methods.serialize = function() {
     title: this.title,
     content: this.content,
     author: this.authorName,
-    created: this.created
+    comments: this.comments
   };
 };
 
 // note that all instance methods and virtual properties on our
 // schema must be defined *before* we make the call to `.model`.
-const Blog = mongoose.model("Blog", blogSchema);
+const Author = mongoose.model('Author', authorSchema);
+const BlogPost = mongoose.model('BlogPost', blogPostSchema);
 
-module.exports = { Blog };
+module.exports = { Author, BlogPost };
