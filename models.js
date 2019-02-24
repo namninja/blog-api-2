@@ -15,8 +15,8 @@ let commentSchema = mongoose.Schema({ content: 'string' });
 const blogPostSchema = mongoose.Schema({
   title: { type: String, trim:true },
   content: { type: String },
-  author: { type: mongoose.SchemaType.Types.ObjectId, ref: 'Author'},
-  // grades will be an array of objects
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'Author'},
+  created: {type: Date, default: Date.now},
   comments: [commentSchema]
 });
 
@@ -36,7 +36,7 @@ blogPostSchema.pre('findOne', function(next) {
 // properties that are stored in the database. Here we use it
 // to generate a human readable string based on the address object
 // we're storing in Mongo.
-blogSchema.virtual("authorName").get(function() {
+blogPostSchema.virtual("authorName").get(function() {
   return `${this.author.firstName} ${this.author.lastName}`.trim();
 });
 
@@ -44,13 +44,23 @@ blogSchema.virtual("authorName").get(function() {
 // this is an *instance method* which will be available on all instances
 // of the model. This method will be used to return an object that only
 // exposes *some* of the fields we want from the underlying data
-blogSchema.methods.serialize = function() {
+blogPostSchema.methods.serialize = function() {
   return {
     id: this._id,
     title: this.title,
     content: this.content,
     author: this.authorName,
+    created: this.created,
     comments: this.comments
+  };
+};
+
+authorSchema.methods.serialize = function() {
+  return {
+    id: this._id,
+    firstName: this.firstName,
+    lastName: this.lastName,
+    userName: this.userName
   };
 };
 
